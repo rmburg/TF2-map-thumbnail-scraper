@@ -53,7 +53,7 @@ def main():
         map_page_soup = BeautifulSoup(response.text, "html.parser")
         img_page_url = map_page_soup.find("table", "infobox").tbody\
             .findChildren("tr")[1].find("a")["href"]
-        filename = f"{map_name}.jpg"
+        filename = f"{map_name}.png"
 
         try:
             destination = open(
