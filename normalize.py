@@ -11,7 +11,7 @@ def normalize(img: Image):
     aspect_ratio = img.width / img.height
     if aspect_ratio < TARGET_AR:  # too tall
         print("➤ Image too tall, cropping.")
-        target_height = round(9 * img.width / 16)
+        target_height = round(TARGET_RES_H * img.width / TARGET_RES_W)
         print(f"➤ Target size: {(img.width, target_height)}")
         excess = img.height - target_height
         excess_top = excess // 2
@@ -21,7 +21,7 @@ def normalize(img: Image):
         )
     elif aspect_ratio > TARGET_AR:  # too wide
         print("➤ Image too wide, cropping.")
-        target_width = round(img.height * 16 / 9)
+        target_width = round(img.height * TARGET_RES_W / TARGET_RES_H)
         print(f"➤ Target size: {(target_width, img.height)}")
         excess = img.width - target_width
         excess_left = excess // 2
