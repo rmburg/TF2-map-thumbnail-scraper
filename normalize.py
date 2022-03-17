@@ -1,41 +1,38 @@
+from typing import Tuple
+
 from PIL import Image
 
-TARGET_RES_W = 320
-TARGET_RES_H = 180
-TARGET_AR = TARGET_RES_W / TARGET_RES_H
-
-
-def normalize(img: Image):
+def normalize(img: Image, target_size: Tuple[int, int]):
     print("➤ Image resolution:", img.size)
+    target_width, target_height = target_size
+    target_aspect_ratio = target_width / target_height
+
     # normalize aspect ratio
     aspect_ratio = img.width / img.height
-    if aspect_ratio < TARGET_AR:  # too tall
+    if aspect_ratio < target_aspect_ratio:  # too tall
         print("➤ Image too tall, cropping.")
-        target_height = round(TARGET_RES_H * img.width / TARGET_RES_W)
-        print(f"➤ Target size: {(img.width, target_height)}")
-        excess = img.height - target_height
-        excess_top = excess // 2
-        excess_bottom = excess - excess_top
+        target_crop_height = round(target_height * img.width / target_width)
+        print(f"➤ Target size: {(img.width, target_crop_height)}")
+        excess_height = img.height - target_crop_height
+        excess_top = excess_height // 2
+        excess_bottom = excess_height - excess_top
         result = img.crop(
             (0, excess_top, img.width, img.height - excess_bottom)
         )
-    elif aspect_ratio > TARGET_AR:  # too wide
+    elif aspect_ratio > target_aspect_ratio:  # too wide
         print("➤ Image too wide, cropping.")
-        target_width = round(img.height * TARGET_RES_W / TARGET_RES_H)
-        print(f"➤ Target size: {(target_width, img.height)}")
-        excess = img.width - target_width
-        excess_left = excess // 2
-        excess_right = excess - excess_left
+        target_crop_width = round(img.height * target_width / target_height)
+        print(f"➤ Target size: {(target_crop_width, img.height)}")
+        excess_width = img.width - target_crop_width
+        excess_left = excess_width // 2
+        excess_right = excess_width - excess_left
         result = img.crop(
             (excess_left, 0, img.width - excess_right, img.height)
         )
     else:
         result = img
 
-    # Remove alpha channel (unsupported by JPEG)
-    result = result.convert("RGB")
-
-    # Scale
-    target_size = (TARGET_RES_W, TARGET_RES_H)
     print(f"➤ Resizing image to {(target_size)}")
-    return result.resize(target_size)
+    # Remove alpha channel (unsupported by JPEG),
+    # and scale to target resolution.
+    return result.convert("RGB").resize(target_size)

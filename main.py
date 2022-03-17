@@ -11,6 +11,9 @@ from normalize import normalize
 BASE_URL = "https://wiki.teamfortress.com"
 LIST_OF_MAPS_URL = "/wiki/Template:List_of_maps"
 
+TARGET_RES_W = 320
+TARGET_RES_H = 180
+
 failed_downloads = []
 
 
@@ -83,7 +86,10 @@ def main():
         b_io = BytesIO()
         shutil.copyfileobj(response.raw, b_io)
         img = Image.open(b_io)
-        img_normalized = normalize(img)
+        img_normalized = normalize(
+            img,
+            target_size=(TARGET_RES_W, TARGET_RES_H)
+        )
 
         print(f"➤ Writing image to {filename}")
         img_normalized.save(destination)
