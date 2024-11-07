@@ -41,7 +41,7 @@ def main():
         "table", "wikitable").tbody.findAll("tr")
 
     for entry in map_table_entries[1:]:
-        map_page_url = entry.find("b").a["href"]
+        map_page_url = entry.find("img").parent["href"]
         map_name = entry.find("code").next
 
         print(f"Getting thumbnail of {map_name}...")
