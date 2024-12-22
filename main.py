@@ -1,6 +1,7 @@
 import shutil
 from os.path import join, dirname, abspath
 from io import BytesIO
+import re
 
 import requests
 from bs4 import BeautifulSoup
@@ -30,6 +31,25 @@ def pad(value):
     return f"{value:.<60}"
 
 
+def normalize_map_name(name):
+    map_suffix_regex = re.compile(
+        "^(final\\d*|rc\\d+[a-z]*|rcx|[a-z]\\d+[a-z]*|[a-z]|beta\\d+[a-z]*|nb\\d+|fix)$"
+    )
+
+    return "_".join(
+        map(
+            lambda i_and_name_part: i_and_name_part[1],
+            filter(
+                lambda i_and_name_part: not (
+                    i_and_name_part[0] > 1
+                    and map_suffix_regex.fullmatch(i_and_name_part[1])
+                ),
+                enumerate(name.lower().split("_")),
+            ),
+        )
+    )
+
+
 def main():
     err, response = get(LIST_OF_MAPS_URL)
     if err:
@@ -37,8 +57,7 @@ def main():
 
     list_soup = BeautifulSoup(response.text, "html.parser")
 
-    map_table_entries = list_soup.find(
-        "table", "wikitable").tbody.findAll("tr")
+    map_table_entries = list_soup.find("table", "wikitable").tbody.findAll("tr")
 
     for entry in map_table_entries[1:]:
         map_page_url = entry.find("img").parent["href"]
@@ -54,13 +73,15 @@ def main():
         print(response.status_code)
 
         map_page_soup = BeautifulSoup(response.text, "html.parser")
-        img_page_url = map_page_soup.find("table", "infobox").tbody\
-            .findChildren("tr")[1].find("a")["href"]
-        filename = f"{map_name}.png"
+        img_page_url = (
+            map_page_soup.find("table", "infobox")
+            .tbody.findChildren("tr")[1]
+            .find("a")["href"]
+        )
+        filename = f"{normalize_map_name(map_name)}.png"
 
         try:
-            destination = open(
-                join(dirname(abspath(__file__)), "img", filename), "xb+")
+            destination = open(join(dirname(abspath(__file__)), "img", filename), "xb+")
         except FileExistsError:
             print(f"➤ File {filename} exists, skipping.")
             continue
@@ -86,10 +107,7 @@ def main():
         b_io = BytesIO()
         shutil.copyfileobj(response.raw, b_io)
         img = Image.open(b_io)
-        img_normalized = normalize(
-            img,
-            target_size=(TARGET_RES_W, TARGET_RES_H)
-        )
+        img_normalized = normalize(img, target_size=(TARGET_RES_W, TARGET_RES_H))
 
         print(f"➤ Writing image to {filename}")
         img_normalized.save(destination)
